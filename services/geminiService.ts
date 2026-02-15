@@ -5,9 +5,15 @@ export class GeminiService {
   private static instance: GeminiService;
   private ai: GoogleGenAI;
 
-  private constructor() {
-    // Strictly follow initialization guidelines
-    this.ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+private constructor() {
+    // 1. Change process.env.API_KEY to import.meta.env.VITE_GEMINI_API_KEY
+    const key = import.meta.env.VITE_GEMINI_API_KEY;
+    
+    if (!key) {
+      console.warn("Gemini API Key is missing! Ensure VITE_GEMINI_API_KEY is set in Netlify.");
+    }
+
+    this.ai = new GoogleGenAI({ apiKey: key });
   }
 
   public static getInstance(): GeminiService {
