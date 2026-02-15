@@ -14,24 +14,23 @@ export class GeminiService {
     return new GeminiService();
   }
 
-  public async solveNaturalLanguage(prompt: string): Promise<{ result: string, explanation: string }> {
-    try {
-      // Force 'v1' here to bypass regional experimental issues
-      const model = this.genAI.getGenerativeModel(
-        { model: "gemini-2.0-flash" }, // Updated to 2.0
-        { apiVersion: 'v1' } 
-      );
+// Add this helper function at the top of your class or file
+const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
-      const result = await model.generateContent(`Solve: "${prompt}". Return JSON with "result" and "explanation" keys.`);
-      const response = await result.response;
-      const text = response.text();
-      
-      // Safety check: remove markdown if the model includes it
-      const cleanJson = text.replace(/```json|```/g, "").trim();
-      return JSON.parse(cleanJson);
-    } catch (error: any) {
-      console.error("Gemini Error Detail:", error);
-      throw new Error("AI service is currently unavailable. Please try again later.");
+// Inside solveNaturalLanguage
+public async solveNaturalLanguage(prompt: string, retryCount = 0): Promise<any> {
+  try {
+    const model = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const result = await model.generateContent(...);
+    // ... rest of your code
+  } catch (error: any) {
+    // If we hit a 429 and haven't tried too many times, wait and try again
+    if (error?.status === 429 && retryCount < 3) {
+      console.warn(`Rate limited. Retrying in ${1000 * (retryCount + 1)}ms...`);
+      await delay(1000 * (retryCount + 1)); 
+      return this.solveNaturalLanguage(prompt, retryCount + 1);
     }
+    throw error;
   }
+}
 }
