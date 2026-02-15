@@ -1,0 +1,5 @@
+{
+  "name": "Gemini Calculator Pro",
+  "description": "A sophisticated calculator with history tracking and a built-in Gemini-powered smart assistant for natural language mathematical queries.",
+  "requestFramePermissions": []
+}
