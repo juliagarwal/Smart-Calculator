@@ -18,7 +18,7 @@ export class GeminiService {
     try {
       // Force 'v1' here to bypass regional experimental issues
       const model = this.genAI.getGenerativeModel(
-        { model: "gemini-1.5-flash" },
+        { model: "gemini-2.0-flash" }, // Updated to 2.0
         { apiVersion: 'v1' } 
       );
 
