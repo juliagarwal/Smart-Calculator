@@ -22,11 +22,19 @@ const App: React.FC = () => {
   const [reuseValue, setReuseValue] = useState<string | null>(null);
   const [hasKey, setHasKey] = useState<boolean>(true);
 
-  useEffect(() => {
+useEffect(() => {
     const checkKey = async () => {
-      if (window.aistudio) {
+      // If we are on Netlify/Local, check the Environment Variable
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      
+      if (apiKey) {
+        setHasKey(true);
+      } else if (window.aistudio) {
+        // Fallback for AI Studio preview mode
         const selected = await window.aistudio.hasSelectedApiKey();
         setHasKey(selected);
+      } else {
+        setHasKey(false);
       }
     };
     checkKey();
