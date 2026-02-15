@@ -25,7 +25,7 @@ private constructor() {
     try {
       const response = await this.ai.models.generateContent({
         // Using Pro for complex math/STEM tasks as per guidelines
-        model: 'gemini-3-pro-preview',
+        model: 'gemini-1.5-flash',
         contents: `Solve the following math problem: "${prompt}". 
         Return a JSON object with the "result" (the numerical answer as a string) and "explanation" (a brief 1-sentence explanation of the steps).`,
         config: {
