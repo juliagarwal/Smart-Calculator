@@ -1,60 +1,44 @@
-
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export class GeminiService {
-  private static instance: GeminiService;
-  private ai: GoogleGenAI;
+  private genAI: GoogleGenerativeAI;
 
-private constructor() {
-    // 1. Change process.env.API_KEY to import.meta.env.VITE_GEMINI_API_KEY
+  private constructor() {
+    // 1. Vite requires 'VITE_' prefix to see variables in the browser
     const key = import.meta.env.VITE_GEMINI_API_KEY;
     
     if (!key) {
-      console.warn("Gemini API Key is missing! Ensure VITE_GEMINI_API_KEY is set in Netlify.");
+      console.error("API Key missing! Add VITE_GEMINI_API_KEY to Netlify settings.");
     }
 
-    this.ai = new GoogleGenAI({ apiKey: key });
+    // 2. Official SDK initialization
+    this.genAI = new GoogleGenerativeAI(key || "");
   }
 
   public static getInstance(): GeminiService {
-    // We create a new instance to ensure we pick up the latest API key from the environment
     return new GeminiService();
   }
 
   public async solveNaturalLanguage(prompt: string): Promise<{ result: string, explanation: string }> {
     try {
-      const response = await this.ai.models.generateContent({
-        // Using Pro for complex math/STEM tasks as per guidelines
-        model: 'gemini-1.5-flash',
-        contents: `Solve the following math problem: "${prompt}". 
-        Return a JSON object with the "result" (the numerical answer as a string) and "explanation" (a brief 1-sentence explanation of the steps).`,
-        config: {
-          thinkingConfig: { thinkingBudget: 2000 },
+      // 3. Get the correct model
+      const model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+      // 4. Request structured JSON
+      const result = await model.generateContent({
+        contents: [{ role: "user", parts: [{ text: `Solve: "${prompt}". Return JSON with "result" and "explanation" keys.` }] }],
+        generationConfig: {
           responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              result: { type: Type.STRING },
-              explanation: { type: Type.STRING }
-            },
-            required: ["result", "explanation"]
-          }
-        }
+        },
       });
 
-      // Following guidelines for extracting text output
-      const text = response.text?.trim();
-      if (!text) {
-        throw new Error("Empty response from AI");
-      }
+      const response = await result.response;
+      const text = response.text();
+      
       return JSON.parse(text);
     } catch (error: any) {
-      console.error("Gemini Error:", error);
-      // Special handling for key selection issues per guidelines
-      if (error?.message?.includes("Requested entity was not found")) {
-        throw new Error("API Key configuration issue. Please re-select your key.");
-      }
-      throw new Error("Failed to process natural language request.");
+      console.error("Detailed Gemini Error:", error);
+      throw new Error("Could not understand that math problem.");
     }
   }
 }
